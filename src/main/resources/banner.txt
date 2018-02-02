@@ -1,0 +1,8 @@
+| |   | |  |//////// | |
+| |   | |  | |       | |
+| |___| |  | |       | |
+|  ___  |  | //////
+| |   | |  | |
+| |   | |  | |_____
+| |   | |  |_//////
+${Ansi.GREEN} :: Spring Boot ::${spring-boot.formatted-version} ${Ansi.DEFAULT}
