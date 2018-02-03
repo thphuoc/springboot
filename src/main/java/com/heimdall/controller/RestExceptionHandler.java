@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 public class RestExceptionHandler {
     @ExceptionHandler(value = UsernameNotFoundException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleExceptionInternal(HttpServletResponse response, Exception ex) {
-        return new ResponseEntity<>(new ErrorStatus(ex.getMessage()), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity handleExceptionInternal(HttpServletResponse response, Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorStatus(ex.getMessage()));
     }
 }

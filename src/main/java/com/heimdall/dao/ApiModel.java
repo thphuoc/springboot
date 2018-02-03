@@ -1,9 +1,11 @@
 package com.heimdall.dao;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -18,10 +20,15 @@ public class ApiModel {
     private String userId;
     private String appId;
 
+    @NotNull
+    @NotBlank
     private String exposedEndpoint;
 
+    @NotNull
+    @NotBlank
     private String resourceUri;
-
+    @NotNull
+    @NotBlank
     private String version;
 
     private boolean published;
@@ -48,23 +55,12 @@ public class ApiModel {
 
     private List<Header> additionResponseHeaders;
 
-    private int requestCount;
-    private long startTimeThrottling;
-
     public List<String> getAllowMethods() {
         return allowMethods;
     }
 
     public void setAllowMethods(List<String> allowMethods) {
         this.allowMethods = allowMethods;
-    }
-
-    public int getRequestCount() {
-        return requestCount;
-    }
-
-    public void setRequestCount(int requestCount) {
-        this.requestCount = requestCount;
     }
 
     public int getThrottlingRequestLimit() {
@@ -121,14 +117,6 @@ public class ApiModel {
 
     public void setConnectionTimeout(int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
-    }
-
-    public long getStartTimeThrottling() {
-        return startTimeThrottling;
-    }
-
-    public void setStartTimeThrottling(long startTimeThrottling) {
-        this.startTimeThrottling = startTimeThrottling;
     }
 
     public int getThrottlingTimeRangeInSecond() {

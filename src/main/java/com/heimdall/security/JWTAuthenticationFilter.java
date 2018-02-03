@@ -2,6 +2,7 @@ package com.heimdall.security;
 
 import com.heimdall.defines.Constants;
 import com.heimdall.dao.Configs;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,23 +28,22 @@ public class JWTAuthenticationFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        Authentication authentication = getAuthentication((HttpServletRequest) servletRequest);
+        UserAuthentication authentication = getAuthentication((HttpServletRequest) servletRequest);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(servletRequest, servletResponse);
         SecurityContextHolder.getContext().setAuthentication(null);
     }
 
-    private Authentication getAuthentication(HttpServletRequest request) {
+    private UserAuthentication getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(Constants.HeaderKey.AUTHORIZATION);
         if (token != null) {
             // parse the token.
-            String user = Jwts.parser()
+            Claims claims = Jwts.parser()
                     .setSigningKey(configs.getSecretKey())
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
-
-            return user != null ? new UsernamePasswordAuthenticationToken(user, null, emptyList()) : null;
+                    .parseClaimsJws(token).getBody();
+            String username = claims.getSubject();
+            request.setAttribute(Constants.HeaderKey.USER_ID, claims.getId());
+            return new UserAuthentication(username, claims.getId(), claims.getExpiration());
         }
         return null;
     }

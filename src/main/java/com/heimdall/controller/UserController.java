@@ -1,39 +1,32 @@
 package com.heimdall.controller;
 
-import com.heimdall.dao.Configs;
 import com.heimdall.dao.UserModel;
 import com.heimdall.defines.AccountType;
 import com.heimdall.defines.Constants;
 import com.heimdall.model.ErrorStatus;
 import com.heimdall.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.heimdall.utils.JWTGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-
-@Controller
+@RestController
 @RequestMapping(value = "/user")
 public class UserController {
     private final UserRepository repository;
-    private final Configs configs;
+    private final JWTGenerator jwtGenerator;
 
     @Autowired
-    public UserController(UserRepository repository, Configs configs) {
+    public UserController(UserRepository repository, JWTGenerator jwtGenerator) {
         this.repository = repository;
-        this.configs = configs;
+        this.jwtGenerator = jwtGenerator;
     }
 
     @PostMapping("/register")
-    public ResponseEntity registerNewUser(@RequestParam String username, @RequestParam String email, @RequestParam String password) {
+    public ResponseEntity registerNewUser(@RequestParam String username,
+                                          @RequestParam String email,
+                                          @RequestParam String password) {
         UserModel userModel = repository.findCustomByEmailOrUserName(username, email);
         if (userModel != null) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ErrorStatus("Username or Email has existed"));
@@ -44,19 +37,27 @@ public class UserController {
         userModel.setPassword(password);
         userModel.setAccountType(AccountType.HEIMDALL.name());
         userModel.setEmail(email);
-        repository.insert(userModel);
+        userModel = repository.insert(userModel);
 
-        String JWT = Jwts.builder()
-                .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + (configs.getTokenExpireDuration() * 1000)))
-                .signWith(SignatureAlgorithm.HS512, configs.getSecretKey())
-                .compact();
+        String JWT = jwtGenerator.generateToken(username, userModel.getId());
         return ResponseEntity.ok().header(Constants.HeaderKey.AUTHORIZATION, JWT).build();
     }
 
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestParam String username, @RequestParam String password) {
+        UserModel user = repository.findCustomByLoginNameAndPassword(username, password);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorStatus("Wrong username/password"));
+        }
+        return ResponseEntity.ok().header(Constants.HeaderKey.AUTHORIZATION, jwtGenerator.generateToken(username, user.getId())).build();
+    }
+
     @GetMapping("/profile")
-    public ResponseEntity getUserProfile() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-        return ResponseEntity.ok(username);
+    public ResponseEntity getUserProfile(@RequestAttribute String userId) {
+        UserModel user = repository.findOne(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
     }
 }

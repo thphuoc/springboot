@@ -4,15 +4,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 
 @Document(collection = "applications")
 public class ApplicationModel {
     @Id
     private String id;
     private String userId;
-    @NotNull(message = "Required application name")
     private String appName;
     private String privateKey;
     @Min(value = 30, message = "Minimum expired token in 30 seconds")

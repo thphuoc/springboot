@@ -2,13 +2,13 @@ package com.heimdall.dao;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserModel {
-
     @Id
     @JsonIgnore
     private String id;
